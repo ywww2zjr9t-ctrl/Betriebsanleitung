@@ -57,7 +57,10 @@
       background:rgba(255,255,255,.80);
       box-shadow:0 3px 16px rgba(0,0,0,.08);
       backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      opacity:1;
+      transition:opacity .35s ease;
     }
+    .footer.hidden{opacity:0;pointer-events:none}
     .dots{display:flex;gap:6px;align-items:center}
     .dot{width:7px;height:7px;border:0;border-radius:50%;padding:0;background:#d8cbd1;cursor:pointer}
     .dot.active{background:var(--accent);transform:scale(1.25)}
@@ -85,7 +88,7 @@
     <button class="nav prev" id="prev" aria-label="Vorherige Seite">‹</button>
     <button class="nav next" id="next" aria-label="Nächste Seite">›</button>
     <div class="hint" id="hint">Wischen zum Blättern</div>
-    <div class="footer" aria-label="Seitennavigation">
+    <div class="footer" id="footer" aria-label="Seitennavigation">
       <div class="dots" id="dots"></div>
       <div class="count" id="count"></div>
     </div>
@@ -99,6 +102,18 @@ const prev = document.getElementById('prev');
 const next = document.getElementById('next');
 const stage = document.getElementById('stage');
 const hint = document.getElementById('hint');
+const footer = document.getElementById('footer');
+
+let footerTimer;
+function showFooter(){
+  footer.classList.remove('hidden');
+  clearTimeout(footerTimer);
+  footerTimer = setTimeout(()=>footer.classList.add('hidden'),2500);
+}
+function hideFooter(){
+  clearTimeout(footerTimer);
+  footer.classList.add('hidden');
+}
 
 let index = 0, startX = 0, deltaX = 0, dragging = false, moved = false;
 
@@ -125,6 +140,7 @@ function render(){
   [...dots.children].forEach((d,i)=>d.classList.toggle('active',i===index));
   count.textContent=`${index+1}/${files.length}`;
   prev.disabled=index===0; next.disabled=index===files.length-1;
+  showFooter();
   // Preload adjacent pages.
   [index-1,index+1].forEach(i=>{
     if(i>=0 && i<files.length){
@@ -167,6 +183,14 @@ function finish(){
 }
 stage.addEventListener('pointerup',finish);
 stage.addEventListener('pointercancel',finish);
+
+stage.addEventListener('click',e=>{
+  if(moved) return;
+  if(e.target.closest('.footer,.nav')) return;
+  if(footer.classList.contains('hidden')) showFooter();
+  else hideFooter();
+});
+
 
 setTimeout(()=>hint.classList.add('hide'),3500);
 render();
